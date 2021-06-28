@@ -12,6 +12,7 @@ node_modules/
 typechain/
 
 # files
+.DS_Store
 .env
 *.log
 *.tsbuildinfo
