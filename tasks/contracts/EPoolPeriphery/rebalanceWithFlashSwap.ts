@@ -38,18 +38,20 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   const currentTimestamp = ethers.BigNumber.from(Math.round(new Date().getTime() / 1000));
   const nextRebalanceTimestamp = lastRebalance.add(rebalanceInterval);
   if (rDiv.lt(rebalanceMinRDiv)) {
-    throw new Error(`Min. ratio deviation of ${rebalanceMinRDiv.toString()} not met.`);
+    console.log(`Min. ratio deviation of ${rebalanceMinRDiv.toString()} not met.`);
+    return;
   }
   if (currentTimestamp.lt(nextRebalanceTimestamp)) {
-    throw new Error(`Next rebalance possible after ${nextRebalanceTimestamp.toString()} (current: ${currentTimestamp.toString()}).`);
+    console.log(`Next rebalance possible after ${nextRebalanceTimestamp.toString()} (current: ${currentTimestamp.toString()}).`);
+    return;
   }
 
-  const tx_issue = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 1000000 }
+  const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
+    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000 }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
-  console.log(`  TxHash:         ${tx_issue.hash}`);
-  const receipt = await tx_issue.wait();
+  console.log(`  TxHash:         ${tx_rebalance.hash}`);
+  const receipt = await tx_rebalance.wait();
   const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranches')]);
   receipt.events?.forEach((event: any) => {
     try {
