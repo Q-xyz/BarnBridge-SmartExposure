@@ -1,4 +1,5 @@
 # Smart Exposure
+![](https://i.imgur.com/Yh36jsx.png)
 
 ## Specification
 [SPEC.md](./SPEC.md)
