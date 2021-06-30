@@ -1,5 +1,6 @@
 import { Signer } from '@ethersproject/abstract-signer';
 import { task } from 'hardhat/config';
+import fetch from 'node-fetch';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -47,8 +48,11 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
     return;
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const gasPrice = (await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast;
   const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000 }
+    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);

@@ -7,23 +7,23 @@ async function main(): Promise<void> {
   // @ts-ignore
   const { AggregatorV3Proxy_BTC_ETH, WETH, WBTC } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
   const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('30', 'gwei');
+  const gasPrice = ethers.utils.parseUnits('9', 'gwei');
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
-  const controller: Contract = await Controller.attach('');
+  const controller: Contract = await Controller.attach('0x913d3924C2e52b500D5ACc6f6080120045dC507b');
 
   // ETokenFactory
   const ETokenFactory: ContractFactory = await ethers.getContractFactory('ETokenFactory');
-  const eTokenFactory: Contract = await ETokenFactory.attach('');
+  const eTokenFactory: Contract = await ETokenFactory.attach('0x3E2f548954A7F8169486936e2Bb616aabCe979E9');
 
   // EPoolHelper
-  const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  const ePoolHelper: Contract = await EPoolHelper.attach('');
+  // const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
+  // const ePoolHelper: Contract = await EPoolHelper.attach('0x7801f3a773cCdC9f5A2E49753E3c34f226b89234');
 
   // EPoolPeriphery
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('');
+  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0xF22482e6B98bdde2427B091c1c131996583FDb22');
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* EPool - WETH / WBTC                                                                                             */
@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   const EPool: ContractFactory = await ethers.getContractFactory('EPool');
   // const ePool: Contract = await EPool.attach('');
   const ePool: Contract = await EPool.deploy(
-    controller.address, eTokenFactory.address, WBTC, WETH, AggregatorV3Proxy_BTC_ETH, true, { gasPrice }
+    controller.address, eTokenFactory.address, WETH, WBTC, AggregatorV3Proxy_BTC_ETH, true, { gasPrice }
   );
   console.log(`EPool:`);
   console.log(`  TxHash:           ${ePool.deployTransaction.hash}`);
