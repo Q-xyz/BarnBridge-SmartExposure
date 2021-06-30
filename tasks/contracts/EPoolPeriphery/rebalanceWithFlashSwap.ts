@@ -28,6 +28,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   console.log(`balanceB:         ${balanceB.toString()}`);
   const [deltaA, deltaB, rChange, rDiv] = await ePoolHelper.connect(admin).delta(_taskArgs.ePool);
   console.log(`Estimated Rebalance:`);
+  console.log(`  rDiv:           ${rDiv.toString()}`);
   console.log(`  deltaA:         ${deltaA.toString() + ((rChange.gt(0)) ? 'to add' : ' to release')}`);
   console.log(`  deltaB:         ${deltaB.toString() + ((rChange.gt(0)) ? 'to release' : ' to add')}`);
   console.log(`  rate:           ${rate.toString()}`);
