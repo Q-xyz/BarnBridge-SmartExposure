@@ -7,7 +7,7 @@ async function main(): Promise<void> {
   // @ts-ignore
   const { AggregatorV3Proxy_BTC_ETH, WETH, WBTC } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
   const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('9', 'gwei');
+  const gasPrice = ethers.utils.parseUnits('18', 'gwei');
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
@@ -70,7 +70,7 @@ async function main(): Promise<void> {
 
   console.log(`EPool.addTranche: 25/75`);
   const tx_tranche_2 = await ePool.connect(signer).addTranche(
-    '333333333333333300', 'Barnbridge Exposure Token Wrapped-Ether 25% / WBTC 75%', 'bb_ET_WETH25/WBTC75', { gasPrice }
+    '333333333333333333', 'Barnbridge Exposure Token Wrapped-Ether 25% / WBTC 75%', 'bb_ET_WETH25/WBTC75', { gasPrice }
   );
   console.log(`  TxHash:           ${tx_tranche_2.hash}`);
   console.log(`  Gas Used:         ${(await tx_tranche_2.wait()).gasUsed.toString()} Gwei`);
