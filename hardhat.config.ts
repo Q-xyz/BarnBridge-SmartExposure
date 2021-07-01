@@ -3,7 +3,6 @@ import { resolve } from 'path';
 dotenvConfig({ path: resolve(__dirname, './.env') });
 
 import { HardhatUserConfig } from 'hardhat/config';
-import { NetworkUserConfig } from 'hardhat/types';
 
 import '@nomiclabs/hardhat-etherscan';
 import '@nomiclabs/hardhat-waffle';
@@ -32,6 +31,7 @@ import './tasks/contracts/EPoolPeriphery/setMaxFlashSwapSlippage';
 import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceMinRDiv';
 import './tasks/contracts/KeeperNetworkAdapter/setKeeperRebalanceInterval';
 import './tasks/contracts/KeeperSubsidyPool/addSubsidy';
+import './tasks/contracts/KeeperSubsidyPool/setBeneficiary';
 import './tasks/contracts/ERC20/approve';
 
 const config: HardhatUserConfig = {

@@ -28,6 +28,7 @@ export const SET_KEEPER_REBALANCE_INTERVAL: string = 'setKeeperRebalanceInterval
 
 // KeeperSubsidyPool
 export const ADD_SUBSIDY: string = 'addSubsidy';
+export const SET_BENEFICIARY: string = 'setBeneficiary';
 
 // ERC20
 export const APPROVE: string = 'approve';
