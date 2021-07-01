@@ -30,8 +30,8 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   const [deltaA, deltaB, rChange, rDiv] = await ePoolHelper.connect(admin).delta(_taskArgs.ePool);
   console.log(`Estimated Rebalance:`);
   console.log(`  rDiv:           ${rDiv.toString()}`);
-  console.log(`  deltaA:         ${deltaA.toString() + ((rChange.gt(0)) ? 'to add' : ' to release')}`);
-  console.log(`  deltaB:         ${deltaB.toString() + ((rChange.gt(0)) ? 'to release' : ' to add')}`);
+  console.log(`  deltaA:         ${deltaA.toString() + ((rChange.gt(0)) ? ' to add' : ' to release')}`);
+  console.log(`  deltaB:         ${deltaB.toString() + ((rChange.gt(0)) ? ' to release' : ' to add')}`);
   console.log(`  rate:           ${rate.toString()}`);
 
   const lastRebalance = await ePool.connect(admin).lastRebalance();
@@ -52,7 +52,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   // @ts-ignore
   const gasPrice = String((await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast);
   const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice }
+    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice: gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);
