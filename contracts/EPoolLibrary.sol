@@ -53,6 +53,8 @@ library EPoolLibrary {
         ) / (sFactorA + (t.targetRatio * sFactorA / sFactorI));
         // (convert to TokenB precision first to avoid altering deltaA)
         deltaB = ((deltaA * sFactorB / sFactorA) * rate) / sFactorI;
+        // round to 0 in case of rounding errors
+        if (deltaA == 0 || deltaB == 0) (deltaA, deltaB, rChange) = (0, 0, 0);
     }
 
     /**
@@ -75,10 +77,11 @@ library EPoolLibrary {
             (totalDeltaA, totalDeltaB) = (_rChange == 0)
                 ? (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB))
                 : (totalDeltaA + int256(_deltaA), totalDeltaB - int256(_deltaB));
+
         }
-        if (totalDeltaA > 0)  {
+        if (totalDeltaA > 0 && totalDeltaB < 0)  {
             (deltaA, deltaB, rChange) = (uint256(totalDeltaA), uint256(-totalDeltaB), 1);
-        } else {
+        } else if (totalDeltaA < 0 && totalDeltaB > 0) {
             (deltaA, deltaB, rChange) = (uint256(-totalDeltaA), uint256(totalDeltaB), 0);
         }
         rDiv = (totalReserveA == 0) ? 0 : deltaA * EPoolLibrary.sFactorI / totalReserveA;
