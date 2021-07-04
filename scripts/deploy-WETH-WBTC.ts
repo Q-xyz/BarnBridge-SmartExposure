@@ -7,7 +7,7 @@ async function main(): Promise<void> {
   // @ts-ignore
   const { AggregatorV3Proxy_BTC_ETH, WETH, WBTC } = NETWORK_ENV[(await ethers.provider.getNetwork()).name];
   const signer = (await ethers.getSigners())[0];
-  const gasPrice = ethers.utils.parseUnits('18', 'gwei');
+  const gasPrice = ethers.utils.parseUnits('11', 'gwei');
 
   // Controller
   const Controller: ContractFactory = await ethers.getContractFactory('Controller');
@@ -19,11 +19,11 @@ async function main(): Promise<void> {
 
   // EPoolHelper
   // const EPoolHelper: ContractFactory = await ethers.getContractFactory('EPoolHelper');
-  // const ePoolHelper: Contract = await EPoolHelper.attach('0x7801f3a773cCdC9f5A2E49753E3c34f226b89234');
+  // const ePoolHelper: Contract = await EPoolHelper.attach('0x8a63822d8C1BE5590bbF72FB58e69285a776A5dF');
 
   // EPoolPeriphery
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0xF22482e6B98bdde2427B091c1c131996583FDb22');
+  const ePoolPeriphery: Contract = await EPoolPeriphery.attach('0x33c8D6f8271675edA1a0e72558d4904C96c7A888');
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* EPool - WETH / WBTC                                                                                             */
@@ -51,7 +51,7 @@ async function main(): Promise<void> {
   console.log(`  Gas Used:         ${(await tx_fee.wait()).gasUsed.toString()} Gwei`);
 
   console.log(`EPool.setMinRDiv:`);
-  const tx_rDiv = await ePool.connect(signer).setMinRDiv(ethers.utils.parseUnits('0.05', 18), { gasPrice }); // 5%
+  const tx_rDiv = await ePool.connect(signer).setMinRDiv('47619047610000000', { gasPrice }); // 5%
   console.log(`  TxHash:           ${tx_rDiv.hash}`);
   console.log(`  Gas Used:         ${(await tx_rDiv.wait()).gasUsed.toString()} Gwei`);
 
