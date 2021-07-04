@@ -215,6 +215,7 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
         string memory eTokenSymbol
     ) external override onlyDao("EPool: not dao") returns (bool) {
         require(tranchesByIndex.length < TRANCHE_LIMIT, "EPool: max. tranche count");
+        require(targetRatio != 0, "EPool: targetRatio == 0");
         IEToken eToken = eTokenFactory.createEToken(eTokenName, eTokenSymbol);
         tranches[address(eToken)] = Tranche(eToken, 10**eToken.decimals(), 0, 0, targetRatio);
         tranchesByIndex.push(address(eToken));
