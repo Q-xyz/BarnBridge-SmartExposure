@@ -23,6 +23,7 @@ task(GET_STATE, 'Get the state of a EPool')
   console.log(`  tokenA:         ${await ePool.connect(admin).tokenA()}`);
   console.log(`  tokenB:         ${await ePool.connect(admin).tokenB()}`);
   console.log(`  rate:           ${await ePool.connect(admin).getRate()}`);
+  console.log(`  rDiv:           ${(await ePoolHelper.connect(admin).delta(ePool.address)).rDiv.toString()}`);
   console.log(`  minRDiv:        ${await ePool.connect(admin).rebalanceMinRDiv()}`);
   console.log(`  interval:       ${await ePool.connect(admin).rebalanceInterval()}`);
   for(let i = 0; ; i++) {
