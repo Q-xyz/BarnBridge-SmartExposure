@@ -31,6 +31,7 @@ export const NETWORK_ENV = {
     'UniswapV2Factory': '0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac', // Sushiswap
     'UniswapV2Router02': '0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F', // Sushiswap
     'WETH': '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    'DAI': '',
     'USDC': '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
     'WBTC': '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
     'Admin': '0x35fFd6E268610E764fF6944d07760D0EFe5E40E5',
@@ -43,6 +44,7 @@ export const NETWORK_ENV = {
     'UniswapV2Factory': '0xc35DADB65012eC5796536bD9864eD8773aBc74C4', // Sushiswap
     'UniswapV2Router02': '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506', // Sushiswap
     'WETH': '0x7ceb23fd6bc0add59e62ac25578270cff1b9f619',
+    'DAI': '',
     'USDC': '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
     'WBTC': '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6',
     'Admin': '0x35fFd6E268610E764fF6944d07760D0EFe5E40E5',
