@@ -35,7 +35,7 @@ describe('KeeperNetworkAdapter', function () {
 
     // deploy keeper network adapter
     this.kna = (await deployContract(this.signers.admin, KeeperNetworkAdapterArtifact, [
-      this.controller.address, ethers.constants.AddressZero, ethers.constants.AddressZero, ethers.constants.AddressZero
+      this.controller.address, ethers.constants.AddressZero
     ])) as KeeperNetworkAdapter;
   });
 
@@ -57,24 +57,81 @@ describe('KeeperNetworkAdapter', function () {
     });
   });
 
-  describe('#setEPool', function () {
-    it('should update EPool if msg.sender is dao', async function () {
+  describe('#addEPool', function () {
+    it('should add EPool if msg.sender is dao', async function () {
       await expect(
-        this.kna.connect(this.signers.dao).setEPool('0x0000000000000000000000000000000000000001')
-      ).to.emit(this.kna, 'SetEPool').withArgs('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.dao).ePool()).to.equal('0x0000000000000000000000000000000000000001');
+        this.kna.connect(this.signers.dao).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
+      ).to.emit(this.kna, 'AddedEPool').withArgs(
+        '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+      );
+      expect(await this.kna.connect(this.signers.dao).ePools(0)).to.equal('0x0000000000000000000000000000000000000001');
+      expect(
+        await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+      ).to.equal('0x0000000000000000000000000000000000000002');
     });
 
-    it('should update EPool if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setEPool('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.guardian).ePool()).to.equal('0x0000000000000000000000000000000000000001');
+    it('should add EPool if msg.sender is guardian', async function () {
+      await expect(
+        this.kna.connect(this.signers.guardian).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
+      ).to.emit(this.kna, 'AddedEPool').withArgs(
+        '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+      );
+      expect(
+        await this.kna.connect(this.signers.guardian).ePools(0)
+      ).to.equal('0x0000000000000000000000000000000000000001');
+      expect(
+        await this.kna.connect(this.signers.guardian).peripheryForEPool('0x0000000000000000000000000000000000000001')
+      ).to.equal('0x0000000000000000000000000000000000000002');
     });
 
-    it('should fail updating EPool if msg.sender is not dao or guardian', async function () {
+    it('should fail adding EPool if msg.sender is not dao or guardian', async function () {
       await expect(
-        this.kna.connect(this.signers.user).setEPool('0x0000000000000000000000000000000000000001')
+        this.kna.connect(this.signers.user).addEPool(
+          '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+        )
       ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
     });
+  });
+
+  it('should remove EPool if msg.sender is dao', async function () {
+    await this.kna.connect(this.signers.dao).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.dao).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.emit(this.kna, 'RemovedEPool').withArgs('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal(ethers.constants.AddressZero);
+  });
+
+  it('should remove EPool if msg.sender is guardian', async function () {
+    await this.kna.connect(this.signers.guardian).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.guardian).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.emit(this.kna, 'RemovedEPool').withArgs('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.guardian).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal(ethers.constants.AddressZero);
+  });
+
+  it('should fail updating EPool if msg.sender is not dao or guardian', async function () {
+    await this.kna.connect(this.signers.dao).addEPool(
+      '0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002'
+    );
+    await expect(
+      this.kna.connect(this.signers.user).removeEPool('0x0000000000000000000000000000000000000001')
+    ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
+    expect(await this.kna.connect(this.signers.dao).ePools(0)).to.equal('0x0000000000000000000000000000000000000001');
+    expect(
+      await this.kna.connect(this.signers.dao).peripheryForEPool('0x0000000000000000000000000000000000000001')
+    ).to.equal('0x0000000000000000000000000000000000000002');
   });
 
   describe('#setEPoolHelper', function () {
@@ -96,47 +153,6 @@ describe('KeeperNetworkAdapter', function () {
       ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
     });
   });
-
-  describe('#setEPoolPeriphery', function () {
-    it('should update EPoolPeriphery if msg.sender is dao', async function () {
-      await expect(
-        this.kna.connect(this.signers.dao).setEPoolPeriphery('0x0000000000000000000000000000000000000001')
-      ).to.emit(this.kna, 'SetEPoolPeriphery').withArgs('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.dao).ePoolPeriphery()).to.equal('0x0000000000000000000000000000000000000001');
-    });
-
-    it('should update EPoolPeriphery if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setEPoolPeriphery('0x0000000000000000000000000000000000000001');
-      expect(await this.kna.connect(this.signers.guardian).ePoolPeriphery()).to.equal('0x0000000000000000000000000000000000000001');
-    });
-
-    it('should fail updating EPoolPeriphery if msg.sender is not dao or guardian', async function () {
-      await expect(
-        this.kna.connect(this.signers.user).setEPoolPeriphery('0x0000000000000000000000000000000000000001')
-      ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
-    });
-  });
-
-  describe('#setKeeperRebalanceMinRDiv', function () {
-    it('should update minRDiv if msg.sender is dao', async function () {
-      await expect(
-        this.kna.connect(this.signers.dao).setKeeperRebalanceMinRDiv(1)
-      ).to.emit(this.kna, 'SetKeeperRebalanceMinRDiv').withArgs(1);
-      expect(await this.kna.connect(this.signers.dao).keeperRebalanceMinRDiv()).to.equal(1);
-    });
-
-    it('should update minRDiv if msg.sender is guardian', async function () {
-      await this.kna.connect(this.signers.guardian).setKeeperRebalanceMinRDiv(1);
-      expect(await this.kna.connect(this.signers.guardian).keeperRebalanceMinRDiv()).to.equal(1);
-    });
-
-    it('should fail updating minRDiv if msg.sender is not dao or guardian', async function () {
-      await expect(
-        this.kna.connect(this.signers.user).setKeeperRebalanceMinRDiv(1)
-      ).to.be.revertedWith('KeeperNetworkAdapter: not dao or guardian');
-    });
-  });
-
 
   describe('#setKeeperRebalanceInterval', function () {
     it('should update rebalance interval if msg.sender is dao', async function () {
@@ -200,17 +216,16 @@ describe('KeeperNetworkAdapter', function () {
         this.ep.address, tranche.eToken, this.eTokenAmountIssued, this.amountA, deadline
       );
 
+      this.rebalanceMinRDiv = parseUnits('0.02', this.decI);
+      await this.ep.connect(this.signers.admin).setRebalanceMinRDiv(this.rebalanceMinRDiv);
+
       // set keeper network adapter
-      // this.keeperRebalanceMinRDiv = parseUnits('0.00005', this.decA);
-      this.keeperRebalanceMinRDiv = parseUnits('0.005', this.decA);
-      await this.kna.connect(this.signers.dao).setKeeperRebalanceMinRDiv(this.keeperRebalanceMinRDiv);
-      await this.kna.connect(this.signers.dao).setEPool(this.ep.address);
+      await this.kna.connect(this.signers.dao).addEPool(this.ep.address, this.epp.address);
       await this.kna.connect(this.signers.dao).setEPoolHelper(this.eph.address);
-      await this.kna.connect(this.signers.dao).setEPoolPeriphery(this.epp.address);
     });
 
     describe('#checkUpkeep', function () {
-      it('should check upkeep - false (> minRDiv && > rebalanceInterval && not funded)', async function () {
+      it('should check upkeep - false (> rebalanceInterval && not funded)', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
@@ -219,40 +234,27 @@ describe('KeeperNetworkAdapter', function () {
         assert(upkeepNeeded === false);
       });
 
-      it('should check upkeep - false (< minRDiv && > rebalanceInterval && funded)', async function () {
+      it('should check upkeep - true (> rebalanceInterval && funded)', async function () {
         await this.fundKsp();
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1810));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
         const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(rDiv.gte(this.keeperRebalanceMinRDiv) === upkeepNeeded && upkeepNeeded === false);
+        assert(upkeepNeeded === true);
       });
 
-      it('should check upkeep - false (> minRDiv && < rebalanceInterval && funded)', async function () {
+      it('should check upkeep - false (< rebalanceInterval && funded)', async function () {
         await this.fundKsp();
         await this.kna.connect(this.signers.dao).setKeeperRebalanceInterval(100);
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
-        await this.kna.connect(this.signers.user).performUpkeep(ethers.constants.HashZero);
+        await this.kna.connect(this.signers.user).performUpkeep((new ethers.utils.AbiCoder).encode(['address'], [this.ep.address]));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2000));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
         const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(upkeepNeeded === false && rDiv.gte(this.keeperRebalanceMinRDiv));
-      });
-
-      it('should check upkeep - true (> minRDiv && > rebalanceInterval && funded)', async function () {
-        await this.fundKsp();
-        const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
-        const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
-        assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        const [deltaA, deltaB, rChange, rDiv] = await this.eph.connect(this.signers.user).delta(this.ep.address);
-        const [upkeepNeeded] = await this.kna.connect(this.signers.user).checkUpkeep(ethers.constants.HashZero);
-        assert(rDiv.gte(this.keeperRebalanceMinRDiv) === upkeepNeeded && upkeepNeeded === true);
+        assert(upkeepNeeded === false);
       });
     });
 
@@ -263,7 +265,7 @@ describe('KeeperNetworkAdapter', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1850));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.kna.connect(this.signers.user).performUpkeep(ethers.constants.HashZero);
+        await this.kna.connect(this.signers.user).performUpkeep((new ethers.utils.AbiCoder).encode(['address'], [this.ep.address]));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));

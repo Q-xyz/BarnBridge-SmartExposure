@@ -1,4 +1,4 @@
-import { ethers, waffle } from 'hardhat';
+import { ethers, waffle, network } from 'hardhat';
 import { assert, expect } from 'chai';
 
 import AggregatorMockArtifact from '../artifacts/contracts/mocks/AggregatorMock.sol/AggregatorMock.json';
@@ -202,18 +202,34 @@ describe('EPool', function () {
       });
     });
 
-    describe('#setMinRDiv', function () {
-      it('should set minRDiv if msg.sender is the dao', async function () {
-        const minRDiv = parseUnits('0.069', this.decA);
+    describe('#setRebalancingMode', function () {
+      it('should set rebalanceMode if msg.sender is the dao', async function () {
+        const mode = 1;
         await expect(
-          this.ep.connect(this.signers.dao).setMinRDiv(minRDiv)
-        ).to.emit(this.ep, 'SetMinRDiv').withArgs(minRDiv);
+          this.ep.connect(this.signers.dao).setRebalanceMode(mode)
+        ).to.emit(this.ep, 'SetRebalanceMode').withArgs(mode);
+        assert((await this.ep.connect(this.signers.dao).rebalanceMode()).eq(mode));
+      });
+
+      it('should fail setting rebalanceMode if msg.sender is not the dao', async function () {
+        await expect(
+          this.ep.connect(this.signers.guardian).setRebalanceMode(1)
+        ).to.revertedWith('EPool: not dao');
+      });
+    });
+
+    describe('#setRebalanceMinRDiv', function () {
+      it('should set minRDiv if msg.sender is the dao', async function () {
+        const minRDiv = parseUnits('0.11', 18);
+        await expect(
+          this.ep.connect(this.signers.dao).setRebalanceMinRDiv(minRDiv)
+        ).to.emit(this.ep, 'SetRebalanceMinRDiv').withArgs(minRDiv);
         assert((await this.ep.connect(this.signers.dao).rebalanceMinRDiv()).eq(minRDiv));
       });
 
       it('should fail setting minRDiv if msg.sender is not the dao', async function () {
         await expect(
-          this.ep.connect(this.signers.guardian).setMinRDiv(this.sFactorA.mul(1))
+          this.ep.connect(this.signers.guardian).setRebalanceMinRDiv(this.sFactorA.mul(1))
         ).to.revertedWith('EPool: not dao');
       });
     });
@@ -235,13 +251,6 @@ describe('EPool', function () {
     });
 
     describe('#rebalance', function () {
-      it('should fail rebalancing if deltaA is not met', async function () {
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
-        await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
-        ).to.be.revertedWith('EPool: minRDiv not met');
-      });
-
       it('should fail rebalancing if fracDelta > 1.0', async function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2000));
         await expect(
@@ -255,20 +264,23 @@ describe('EPool', function () {
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced))
         const delta = await this.eph.connect(this.signers.user).delta(this.ep.address);
-        assert(this.roundEqual(delta.deltaA.mul(this.sFactorI).div(tranche.reserveA), delta.rDiv));
+        const preTrancheDelta = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, tranche.eToken);
+        assert(preTrancheDelta.rDiv.gt(0));
         const receipt = await (await this.ep.connect(this.signers.user).rebalance(this.sFactorI)).wait();
-        const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranches')]);
-        const event = receipt.events?.find((event: any) => {
-          try { RebalanceEvent.parseLog(event); return true; } catch(error) { return false; }
-        });
-        if (event === undefined) { return assert(false); }
-        const result = RebalanceEvent.parseLog(event);
-        assert(
-          this.roundEqual(result.args.deltaA, delta.deltaA)
-          && this.roundEqual(result.args.deltaB, delta.deltaB)
-          && this.roundEqual(result.args.rChange, delta.rChange)
-          && this.roundEqual(result.args.rDiv, delta.rDiv)
-        );
+        const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranche')]);
+        assert(receipt.events && receipt.events.length > 0);
+        for (const event of receipt.events || []) {
+          try { RebalanceEvent.parseLog(event); } catch(error) { continue; }
+          if (event === undefined) { return assert(false); }
+          const result = RebalanceEvent.parseLog(event);
+          assert(
+            this.roundEqual(result.args.deltaA, delta.deltaA)
+            && this.roundEqual(result.args.deltaB, delta.deltaB)
+            && this.roundEqual(result.args.rChange, delta.rChange)
+          );
+        }
+        const postTrancheDelta = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, tranche.eToken);
+        assert(postTrancheDelta.rDiv.eq(0));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
@@ -282,11 +294,56 @@ describe('EPool', function () {
         assert(this.roundEqual(balanceOf, eTokenAmount));
       });
 
-      it('should fail rebalancing if current time is within rebalance interval', async function () {
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(3000));
+      it('rebalanceMode == 0: should not rebalance tranche if minRDiv is not met and if interval is not bided', async function () {
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
+        await this.ep.connect(this.signers.dao).setRebalanceMode(0);
+        const { rDiv: preRDiv } = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, this.eToken.address);
         await expect(
           this.ep.connect(this.signers.user).rebalance(this.sFactorI)
-        ).to.be.revertedWith('EPool: within interval');
+        ).to.not.emit(this.ep, 'RebalancedTranche');
+        const { rDiv: postRDiv } = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, this.eToken.address);
+        assert(preRDiv.eq(postRDiv));
+      });
+
+      it('rebalanceMode == 0: should rebalance if minRDiv is not met, interval is bided', async function () {
+        await network.provider.send('evm_increaseTime', [
+          (await this.ep.connect(this.signers.user).rebalanceInterval()).toNumber()
+        ]);
+        await expect(
+          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+        ).to.emit(this.ep, 'RebalancedTranche');
+      });
+
+      it('rebalanceMode == 0: should rebalance if minRDiv is met, interval is not bided', async function () {
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2500));
+        await expect(
+          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+        ).to.emit(this.ep, 'RebalancedTranche');
+      });
+
+      it('rebalanceMode == 1: should not rebalance if minRDiv is met, interval is not bided', async function () {
+        await this.ep.connect(this.signers.dao).setRebalanceMode(1);
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
+        await expect(
+          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+        ).to.not.emit(this.ep, 'RebalancedTranche');
+      });
+
+      it('rebalanceMode == 1: should not rebalance if minRDiv is not met, interval is bided', async function () {
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2500));
+        await network.provider.send('evm_increaseTime', [
+          (await this.ep.connect(this.signers.user).rebalanceInterval()).toNumber()
+        ]);
+        await expect(
+          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+        ).to.not.emit(this.ep, 'RebalancedTranche');
+      });
+
+      it('rebalanceMode == 1: should rebalance if minRDiv is met, interval is bided', async function () {
+        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
+        await expect(
+          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+        ).to.emit(this.ep, 'RebalancedTranche');
       });
     });
 
