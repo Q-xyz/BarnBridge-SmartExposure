@@ -76,6 +76,12 @@ describe('EPool', function () {
   });
 
   describe('#addTranche', function () {
+    it('should fail creating a new tranche if targetRatio is 0', async function () {
+      await expect(
+        this.ep.connect(this.signers.dao).addTranche(0, '_', '_')
+      ).to.be.revertedWith('EPool: targetRatio == 0');
+    });
+
     it('should create a new tranche', async function () {
       await expect(
         this.ep.connect(this.signers.dao).addTranche(1, '_', '_')
@@ -104,10 +110,12 @@ describe('EPool', function () {
       await environmentFixture.bind(this)();
 
       // approve TokenA and TokenB for EPool
-      await this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(2));
-      await this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(2));
-      await this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(5000));
-      await this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(5000));
+      await Promise.all([
+        this.tokenA.connect(this.signers.admin).approve(this.ep.address, this.sFactorA.mul(2)),
+        this.tokenB.connect(this.signers.admin).approve(this.ep.address, this.sFactorB.mul(2)),
+        this.tokenA.connect(this.signers.user).approve(this.ep.address, this.sFactorA.mul(5000)),
+        this.tokenB.connect(this.signers.user).approve(this.ep.address, this.sFactorB.mul(5000))
+      ]);
 
       if (this.localRun || this.forking) {
         // initial exchange rate
