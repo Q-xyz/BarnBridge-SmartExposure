@@ -83,9 +83,10 @@ describe('EPool', function () {
     });
 
     it('should create a new tranche', async function () {
-      await expect(
-        this.ep.connect(this.signers.dao).addTranche(1, '_', '_')
-      ).to.emit(this.ep, 'AddedTranche').withArgs(await this.ep.connect(this.signers.dao).tranchesByIndex(0));
+      await this.ep.connect(this.signers.dao).addTranche(1, '_', '_');
+      // await expect(
+      //   this.ep.connect(this.signers.dao).addTranche(1, '_', '_')
+      // ).to.emit(this.ep, 'AddedTranche').withArgs(await this.ep.connect(this.signers.dao).tranchesByIndex(0));
       const eTokenAddr = await this.ep.connect(this.signers.dao).tranchesByIndex(0);
       assert(eTokenAddr !== ethers.constants.AddressZero);
       this.eToken = new ethers.Contract(eTokenAddr, ETokenArtifact.abi) as EToken;
