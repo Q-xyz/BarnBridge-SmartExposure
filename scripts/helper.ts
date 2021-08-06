@@ -21,9 +21,9 @@ export async function callMethod(
   console.log(`${contractName}.${methodName}:`);
   console.log(`  TxHash:           ${tx.hash}`);
   console.log(`  Address:          ${contract.address}`);
-  await tx.wait()
+  const receipt = await tx.wait();
   console.log(`  Gas Price:        ${tx.gasPrice.toString()} Gwei`);
-  console.log(`  Gas Used:         ${tx.gasUsed.toString()} Gwei`);
+  console.log(`  Gas Used:         ${receipt.gasUsed.toString()} Gas`);
   console.log(``);
 }
 
@@ -44,6 +44,6 @@ export async function deployContract(
   console.log(`  Address:          ${contract.address}`);
   const receipt = await contract.deployTransaction.wait();
   console.log(`  Gas Price:        ${ethers.utils.formatUnits(contract.deployTransaction.gasPrice?.toString() || '0', 'gwei')} Gwei`);
-  console.log(`  Gas Used:         ${receipt.gasUsed.toString()} Gwei \n`);
-  return { contractName, contract, constructorParams: { ...args } };
+  console.log(`  Gas Used:         ${receipt.gasUsed.toString()} Gas \n`);
+  return { contractName, contract, constructorParams: [...args] };
 }

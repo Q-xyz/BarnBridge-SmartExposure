@@ -76,7 +76,7 @@ async function main(): Promise<void> {
     ['1000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 50% / USDC 50%', 'bb_ET_WETH50/USDC50'],
     opts
   );
-  console.log(`  EToken (50/50):   ${(await ePool.connect(deployer).getTranches())[0].eToken }`);
+  console.log(`  EToken (50/50):   ${(await ePool.connect(deployer).getTranches())[0].eToken}\n`);
 
   // Create tranche 25 / 75 on EPool
   await callMethod(
@@ -87,7 +87,7 @@ async function main(): Promise<void> {
     ['333333333333333333', 'Barnbridge Exposure Token Wrapped-Ether 25% / USDC 75%', 'bb_ET_WETH25/USDC75'],
     opts
   );
-  console.log(`  EToken (25/75):   ${(await ePool.connect(deployer).getTranches())[1].eToken }`);
+  console.log(`  EToken (25/75):   ${(await ePool.connect(deployer).getTranches())[1].eToken}\n`);
 
   // Create tranche 75 / 25 on EPool
   await callMethod(
@@ -98,7 +98,7 @@ async function main(): Promise<void> {
     ['3000000000000000000', 'Barnbridge Exposure Token Wrapped-Ether 75% / USDC 25%', 'bb_ET_WETH75/USDC25'],
     opts
   );
-  console.log(`  EToken (75/25):   ${(await ePool.connect(deployer).getTranches())[2].eToken }`);
+  console.log(`  EToken (75/25):   ${(await ePool.connect(deployer).getTranches())[2].eToken}\n`);
 
   // Add EPool on KeeperNetworkAdapter
   await callMethod(

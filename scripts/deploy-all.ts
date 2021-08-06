@@ -135,7 +135,7 @@ async function main(): Promise<void> {
     ['428571428571428540', 'Barnbridge Exposure Token Wrapped-Ether 30% / DAI 70%', 'bb_ET_WETH30/DAI70'],
     opts
   );
-  console.log(`  EToken:           ${(await ePool.connect(deployer).getTranches())[0].eToken }`);
+  console.log(`  EToken (30/70):   ${(await ePool.connect(deployer).getTranches())[0].eToken }\n`);
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Verify contracts on Etherscan                                                                                   */
