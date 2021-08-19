@@ -333,7 +333,7 @@ describe('EPoolPeriphery', function () {
     describe('#rebalanceWithFlashSwap', function () {
       it('should fail rebalancing an unapproved EPool', async function () {
         await expect(
-          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.eppV3.address, this.sFactorI.mul(1))
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.eppV3.address)
         ).to.be.revertedWith('EPoolPeriphery: unapproved EPool');
       });
 
@@ -345,7 +345,7 @@ describe('EPoolPeriphery', function () {
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
         await this.eppV3.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('0.9', 18)) // -10% slippage
         await expect(
-          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1))
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address)
         ).to.be.revertedWith('EPoolPeriphery: excessive slippage');
         await this.eppV3.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('1.1', 18)) // 10% slippage
       });
@@ -356,7 +356,7 @@ describe('EPoolPeriphery', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2600));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1));
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address);
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
@@ -376,7 +376,7 @@ describe('EPoolPeriphery', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2300));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, this.sFactorI.mul(1));
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address);
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));

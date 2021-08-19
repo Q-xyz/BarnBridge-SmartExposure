@@ -65,7 +65,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   // @ts-ignore
   const gasPrice = String((await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast);
   const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice: gasPrice }
+    ePool.address, { gasLimit: 500000, gasPrice: gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);

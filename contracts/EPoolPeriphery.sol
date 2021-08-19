@@ -292,13 +292,9 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
      * The potential slippage between the EPool oracle and uniswap is covered by the KeeperSubsidyPool.
      * @dev Fails if maxFlashSwapSlippage is exceeded in uniswapV2Call
      * @param ePool Address of the EPool to rebalance
-     * @param fracDelta Fraction of the delta to rebalance (1e18 for rebalancing the entire delta)
      * @return True on success
      */
-    function rebalanceWithFlashSwap(
-        IEPool ePool,
-        uint256 fracDelta
-    ) external override returns (bool) {
+    function rebalanceWithFlashSwap(IEPool ePool) external override returns (bool) {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
         (uint256 deltaA, uint256 deltaB, uint256 rChange) = EPoolLibrary.delta(
@@ -314,7 +310,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
             (amountOut0, amountOut1) = (address(tokenA) == pair.token0())
                 ? (deltaA, uint256(0)) : (uint256(0), deltaA);
         }
-        bytes memory data = abi.encode(ePool, fracDelta);
+        bytes memory data = abi.encode(ePool);
         pair.swap(amountOut0, amountOut1, address(this), data);
         return true;
     }
@@ -334,11 +330,11 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         uint256 /* amount1 */,
         bytes calldata data
     ) external {
-        (IEPool ePool, uint256 fracDelta) = abi.decode(data, (IEPool, uint256));
+        (IEPool ePool) = abi.decode(data, (IEPool));
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         // fails if no funds are forwarded in the flash swap callback from the uniswap pair
         // TokenA, TokenB are already approved
-        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance(fracDelta);
+        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance();
         address[] memory path = new address[](2); // [0] flash swap repay token, [1] flash lent token
         uint256 amountsIn; // flash swap repay amount
         uint256 deltaOut;

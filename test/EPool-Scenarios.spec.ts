@@ -30,7 +30,7 @@ describe('EPool - Scenarios', function () {
           { method: 'setAnswer', rate: this.sFactorI.mul(1850), signer: this.signers.admin },
           { method: 'issueExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(1830), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'collectFee', signer: this.signers.feesOwner },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
@@ -55,7 +55,7 @@ describe('EPool - Scenarios', function () {
           { method: 'issueExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(1400), signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
@@ -74,10 +74,10 @@ describe('EPool - Scenarios', function () {
         actions: [
           { method: 'issueExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'setAnswer', rate: this.sFactorI.mul(200), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(50), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
@@ -94,10 +94,10 @@ describe('EPool - Scenarios', function () {
         actions: [
           { method: 'issueExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'setAnswer', rate: this.sFactorI.mul(50), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(500), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
@@ -116,7 +116,7 @@ describe('EPool - Scenarios', function () {
           { method: 'issueExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(50), signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
       },
@@ -134,7 +134,7 @@ describe('EPool - Scenarios', function () {
           { method: 'issueExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(200), signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 2, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
       }
@@ -228,7 +228,7 @@ describe('EPool - Scenarios', function () {
                     const ratio = await this.eph.connect(action.signer).currentRatio(this.ep.address, eToken.address);
                     return !this.roundEqual(ratio, t.targetRatio);
                   }));
-                  await this.ep.connect(action.signer).rebalance(action.deltaFrac);
+                  await this.ep.connect(action.signer).rebalance();
                   for (const t of tranches) {
                     const eToken = new ethers.Contract(t.eToken, ETokenArtifact.abi) as EToken;
                     const ratio = await this.eph.connect(action.signer).currentRatio(this.ep.address, eToken.address);

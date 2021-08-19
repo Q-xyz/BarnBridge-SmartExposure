@@ -62,7 +62,7 @@ interface IEPool {
 
     function getRate() external view returns (uint256);
 
-    function rebalance(uint256 fracDelta) external returns (uint256 deltaA, uint256 deltaB, uint256 rChange);
+    function rebalance() external returns (uint256 deltaA, uint256 deltaB, uint256 rChange);
 
     function issueExact(address eToken, uint256 amount) external returns (uint256 amountA, uint256 amountB);
 

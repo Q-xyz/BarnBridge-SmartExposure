@@ -260,13 +260,6 @@ describe('EPool', function () {
     });
 
     describe('#rebalance', function () {
-      it('should fail rebalancing if fracDelta > 1.0', async function () {
-        await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2000));
-        await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI.add(1))
-        ).to.be.revertedWith('EPool: fracDelta > 1.0');
-      });
-
       it('should rebalance tranches', async function () {
         const tranche = await this.ep.connect(this.signers.user).tranches(await this.ep.connect(this.signers.user).tranchesByIndex(0));
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2000));
@@ -275,7 +268,7 @@ describe('EPool', function () {
         const delta = await this.eph.connect(this.signers.user).delta(this.ep.address);
         const preTrancheDelta = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, tranche.eToken);
         assert(preTrancheDelta.rDiv.gt(0));
-        const receipt = await (await this.ep.connect(this.signers.user).rebalance(this.sFactorI)).wait();
+        const receipt = await (await this.ep.connect(this.signers.user).rebalance()).wait();
         const RebalanceEvent = new ethers.utils.Interface([this.ep.interface.getEvent('RebalancedTranche')]);
         assert(receipt.events && receipt.events.length > 0);
         for (const event of receipt.events || []) {
@@ -308,7 +301,7 @@ describe('EPool', function () {
         await this.ep.connect(this.signers.dao).setRebalanceMode(0);
         const { rDiv: preRDiv } = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, this.eToken.address);
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.not.emit(this.ep, 'RebalancedTranche');
         const { rDiv: postRDiv } = await this.eph.connect(this.signers.user).trancheDelta(this.ep.address, this.eToken.address);
         assert(preRDiv.eq(postRDiv));
@@ -319,14 +312,14 @@ describe('EPool', function () {
           (await this.ep.connect(this.signers.user).rebalanceInterval()).toNumber()
         ]);
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.emit(this.ep, 'RebalancedTranche');
       });
 
       it('rebalanceMode == 0: should rebalance if minRDiv is met, interval is not bided', async function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2500));
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.emit(this.ep, 'RebalancedTranche');
       });
 
@@ -334,7 +327,7 @@ describe('EPool', function () {
         await this.ep.connect(this.signers.dao).setRebalanceMode(1);
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.not.emit(this.ep, 'RebalancedTranche');
       });
 
@@ -344,14 +337,14 @@ describe('EPool', function () {
           (await this.ep.connect(this.signers.user).rebalanceInterval()).toNumber()
         ]);
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.not.emit(this.ep, 'RebalancedTranche');
       });
 
       it('rebalanceMode == 1: should rebalance if minRDiv is met, interval is bided', async function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(1980));
         await expect(
-          this.ep.connect(this.signers.user).rebalance(this.sFactorI)
+          this.ep.connect(this.signers.user).rebalance()
         ).to.emit(this.ep, 'RebalancedTranche');
       });
     });

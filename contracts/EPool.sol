@@ -245,11 +245,9 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     }
 
     function _rebalanceTranche(
-        Tranche storage t, uint256 fracDelta, uint256 rate
+        Tranche storage t, uint256 rate
     ) internal returns (uint256 deltaA, uint256 deltaB, uint256 rChange, uint256 rDiv) {
-        uint256 _deltaA; uint256 _deltaB;
-        (_deltaA, _deltaB, rChange, rDiv) = EPoolLibrary.trancheDelta(t, rate, sFactorA, sFactorB);
-        (deltaA, deltaB) = (fracDelta * _deltaA / EPoolLibrary.sFactorI, fracDelta * _deltaB / EPoolLibrary.sFactorI);
+        (deltaA, deltaB, rChange, rDiv) = EPoolLibrary.trancheDelta(t, rate, sFactorA, sFactorB);
         (bool deviated, bool bided) = (rDiv >= rebalanceMinRDiv, block.timestamp >= t.rebalancedAt + rebalanceInterval);
         if (
             // skip if condition of rebalanceMode 0 wasn't met
@@ -273,21 +271,17 @@ contract EPool is ControllerMixin, ChainlinkMixin, IEPool {
     /**
      * @notice Rebalances all tranches based on the current rate
      * @dev Can be overriden by contract inherting from EPool and implementing custom logic for rebalancing
-     * @param fracDelta Fraction of the delta of deltaA or deltaB to rebalance
      * @return deltaA Summed rebalanced delta of all tranches reserveA
      * @return deltaB Summed rebalanced delta of all tranches reserveB
      * @return rChange 0 - for deltaA <= 0 and deltaB >= 0, 1 - for deltaA > 0 and deltaB < 0
      */
-    function rebalance(
-        uint256 fracDelta
-    ) external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
-        require(fracDelta <= EPoolLibrary.sFactorI, "EPool: fracDelta > 1.0");
+    function rebalance() external virtual override returns (uint256 deltaA, uint256 deltaB, uint256 rChange) {
         uint256 rate = _rate();
         int256 totalDeltaA;
         int256 totalDeltaB;
         for (uint256 i = 0; i < tranchesByIndex.length; i++) {
             (uint256 _deltaA, uint256 _deltaB, uint256 _rChange,) = _rebalanceTranche(
-                tranches[tranchesByIndex[i]], fracDelta, rate
+                tranches[tranchesByIndex[i]], rate
             );
             if (_rChange == 0) {
                 (totalDeltaA, totalDeltaB) = (totalDeltaA - int256(_deltaA), totalDeltaB + int256(_deltaB));

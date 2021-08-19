@@ -166,6 +166,6 @@ contract KeeperNetworkAdapter is ControllerMixin, IKeeperNetworkAdapter {
     function performUpkeep(bytes calldata performData) external override {
         IEPool ePool = abi.decode(performData, (IEPool));
         lastKeeperRebalance[ePool] = block.timestamp;
-        peripheryForEPool[ePool].rebalanceWithFlashSwap(ePool, 1e18);
+        peripheryForEPool[ePool].rebalanceWithFlashSwap(ePool);
     }
 }

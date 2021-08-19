@@ -31,7 +31,7 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { method: 'issueForMaxTokenB', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(1830), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(1830), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemForMinTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemForMinTokenB', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
@@ -55,7 +55,7 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { method: 'setAnswer', rate: this.sFactorI.mul(1400), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(1400), signer: this.signers.admin },
           { method: 'redeemForMinTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueForMaxTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemForMinTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemForMinTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
@@ -75,11 +75,11 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { method: 'issueForMaxTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'setAnswer', rate: this.sFactorI.mul(2000), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(2000), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueForMaxTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(500), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(500), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 }
         ]
@@ -94,11 +94,11 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { targetRatio: toUnit(String(75/25), this.decI), symbol: 'bb_ET_WETH75/DAI25', name: 'Barnbridge Exposure Token Wrapped-Ether 75% / DAI 25%' }
         ],
         actions: [
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'issueForMaxTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
           { method: 'setAnswer', rate: this.sFactorI.mul(100), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(100), signer: this.signers.admin },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this. signers.admin },
+          { method: 'rebalance', signer: this. signers.admin },
           { method: 'issueForMaxTokenA', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
           { method: 'setAnswer', rate: this.sFactorI.mul(500), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(500), signer: this.signers.admin },
@@ -121,9 +121,9 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { method: 'setAnswer', rate: this.sFactorI.mul(100), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(100), signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin }
+          { method: 'rebalance', signer: this.signers.admin }
         ]
       },
       {
@@ -141,9 +141,9 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
           { method: 'setAnswer', rate: this.sFactorI.mul(2000), signer: this.signers.admin },
           { method: 'setRate', rate: this.sFactorI.mul(2000), signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin },
+          { method: 'rebalance', signer: this.signers.admin },
           { method: 'redeemExact', trancheIndex: 0, eTokenAmount: toUnit('1', this.decE), signer: this.signers.user2 },
-          { method: 'rebalance', deltaFrac: toUnit('1', this.decI), signer: this.signers.admin }
+          { method: 'rebalance', signer: this.signers.admin }
         ]
       }
     ];
@@ -265,7 +265,7 @@ describe('EPoolPeripheryV3 - Scenarios', function () {
                     const ratio = await this.eph.connect(action.signer).currentRatio(this.ep.address, eToken.address);
                     return !this.roundEqual(ratio, t.targetRatio);
                   }));
-                  await this.ep.connect(action.signer).rebalance(action.deltaFrac);
+                  await this.ep.connect(action.signer).rebalance();
                   for (const t of tranches) {
                     const eToken = new ethers.Contract(t.eToken, ETokenArtifact.abi) as EToken;
                     const ratio = await this.eph.connect(action.signer).currentRatio(this.ep.address, eToken.address);

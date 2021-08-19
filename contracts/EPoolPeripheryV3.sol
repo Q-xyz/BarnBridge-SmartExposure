@@ -340,13 +340,9 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
      * The potential slippage between the EPool oracle and uniswap is covered by the KeeperSubsidyPool.
      * @dev Fails if maxFlashSwapSlippage is exceeded in uniswapV2Call
      * @param ePool Address of the EPool to rebalance
-     * @param fracDelta Fraction of the delta to rebalance (1e18 for rebalancing the entire delta)
      * @return True on success
      */
-    function rebalanceWithFlashSwap(
-        IEPool ePool,
-        uint256 fracDelta
-    ) external override returns (bool) {
+    function rebalanceWithFlashSwap(IEPool ePool) external override returns (bool) {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
         // map TokenA, TokenB to the pools token0, token1 via getPoolKey
@@ -374,7 +370,7 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
             zeroForOne,
             amount,
             ((zeroForOne) ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1),
-            abi.encode(poolKey, ePool, fracDelta)
+            abi.encode(poolKey, ePool)
         );
         return true;
     }
@@ -392,14 +388,14 @@ contract EPoolPeripheryV3 is ControllerMixin, IEPoolPeriphery {
         int256 amount1,
         bytes calldata data
     ) external {
-        (PoolAddress.PoolKey memory poolKey, IEPool ePool, uint256 fracDelta) = abi.decode(
-            data, (PoolAddress.PoolKey, IEPool, uint256)
+        (PoolAddress.PoolKey memory poolKey, IEPool ePool) = abi.decode(
+            data, (PoolAddress.PoolKey, IEPool)
         );
         require(msg.sender == PoolAddress.computeAddress(factory, poolKey), "EPoolPeriphery: sender is not pool");
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         // fails if no funds are forwarded in the flash swap callback from the uniswap pool
         // TokenA, TokenB are already approved
-        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance(fracDelta);
+        (uint256 deltaA, uint256 deltaB, uint256 rChange) = ePool.rebalance();
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
         require(
             (poolKey.token0 == tokenA && poolKey.token1 == tokenB)

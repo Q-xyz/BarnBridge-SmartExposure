@@ -41,7 +41,7 @@ task(REBALANCE, 'Rebalances a EPool')
     console.log(`TokenB.approve:`);
     console.log(`  TxHash:       ${tx_approve.hash}`);
   }
-  const tx_issue = await ePool.connect(admin).rebalance(ethers.utils.parseUnits('1', 18), { gasLimit: 1000000 });
+  const tx_issue = await ePool.connect(admin).rebalance({ gasLimit: 1000000 });
   console.log(`EPool.rebalance:`);
   console.log(`  TxHash:         ${tx_issue.hash}`);
   const receipt = await tx_issue.wait();

@@ -59,7 +59,7 @@ interface IEPoolPeriphery {
         uint256 deadline
     ) external returns (bool);
 
-    function rebalanceWithFlashSwap(IEPool ePool, uint256 fracDelta) external returns (bool);
+    function rebalanceWithFlashSwap(IEPool ePool) external returns (bool);
 
     function recover(IERC20 token, uint256 amount) external returns (bool);
 }
