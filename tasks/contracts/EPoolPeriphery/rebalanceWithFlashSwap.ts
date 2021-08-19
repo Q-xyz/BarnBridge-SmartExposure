@@ -39,6 +39,10 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   const rebalanceMinRDiv = await ePool.connect(admin).rebalanceMinRDiv();
   const currentTimestamp = ethers.BigNumber.from(Math.round(new Date().getTime() / 1000));
   const nextRebalanceTimestamp = lastRebalance.add(rebalanceInterval);
+  if (deltaA.eq(0) || deltaB.eq(0)) {
+    console.log(`Delt is zero. Nothing to rebalance.`);
+    return;
+  }
   if (rDiv.lt(rebalanceMinRDiv)) {
     console.log(`Min. ratio deviation of ${rebalanceMinRDiv.toString()} not met.`);
     return;
