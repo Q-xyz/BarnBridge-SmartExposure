@@ -61,6 +61,10 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
     console.log('No rebalance required');
     return;
   }
+  if (deltaA.eq(0) || deltaB.eq(0)) {
+    console.log(`Delt is zero. Nothing to rebalance.`);
+    return;
+  }
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
