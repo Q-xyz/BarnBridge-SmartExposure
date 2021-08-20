@@ -19,13 +19,7 @@ interface IEPoolPeriphery {
 
     function ePools(address) external view returns (bool);
 
-    function keeperSubsidyPool() external view returns (IKeeperSubsidyPool);
-
-    function maxFlashSwapSlippage() external view returns (uint256);
-
     function setEPoolApproval(IEPool ePool, bool approval) external returns (bool);
-
-    function setMaxFlashSwapSlippage(uint256 _maxFlashSwapSlippage) external returns (bool);
 
     function issueForMaxTokenA(
         IEPool ePool,
@@ -59,7 +53,7 @@ interface IEPoolPeriphery {
         uint256 deadline
     ) external returns (bool);
 
-    function rebalanceWithFlashSwap(IEPool ePool) external returns (bool);
+    function rebalanceWithFlashSwap(IEPool ePool, uint256 maxSlippage) external returns (bool);
 
     function recover(IERC20 token, uint256 amount) external returns (bool);
 }

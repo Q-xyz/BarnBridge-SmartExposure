@@ -28,7 +28,6 @@ async function main(): Promise<void> {
   const eTokenFactory = await attachContract('ETokenFactory', '');
   const ePoolPeriphery = await attachContract('EPoolPeriphery', '');
   const ePoolPeripheryV3 = await attachContract('EPoolPeripheryV3', '');
-  const keeperNetworkAdapter = await attachContract('KeeperNetworkAdapter', '');
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* EPool - WETH / USDC                                                                                             */
@@ -99,11 +98,6 @@ async function main(): Promise<void> {
     opts
   );
   console.log(`  EToken (75/25):   ${(await ePool.connect(deployer).getTranches())[2].eToken}\n`);
-
-  // Add EPool on KeeperNetworkAdapter
-  await callMethod(
-    deployer, 'KeeperNetworkAdapter', keeperNetworkAdapter.address, 'addEPool', [ePool.address], opts
-  );
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Verify contracts on Etherscan                                                                                   */

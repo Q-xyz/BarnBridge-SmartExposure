@@ -42,17 +42,12 @@ async function main(): Promise<void> {
 
   // EPoolHelper
   deployed.push({...await deployContract('EPoolHelper', [], opts)});
-  const ePoolHelper = deployed[deployed.length - 1].contract;
-
-  // KeeperSubsidyPool
-  deployed.push({...await deployContract('KeeperSubsidyPool', [controller.address], opts)});
-  const keeperSubsidyPool = deployed[deployed.length - 1].contract;
+  // const ePoolHelper = deployed[deployed.length - 1].contract;
 
   // EPoolPeriphery
   deployed.push({...await deployContract(
     'EPoolPeriphery',
-    // 1.03 % --> 3% flash swap slippage
-    [controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, '1030000000000000000'],
+    [controller.address, UniswapV2Factory, UniswapV2Router02],
     opts
   )});
   const ePoolPeriphery = deployed[deployed.length - 1].contract;
@@ -60,16 +55,10 @@ async function main(): Promise<void> {
   // EPoolPeripheryV3
   deployed.push({...await deployContract(
     'EPoolPeripheryV3',
-    // 1.03 % --> 3% flash swap slippage
-    [controller.address, UniswapV3Factory, UniswapV3Router, keeperSubsidyPool.address, '1030000000000000000', UniswapV3Quoter],
+    [controller.address, UniswapV3Factory, UniswapV3Router, UniswapV3Quoter],
     opts
   )});
   const ePoolPeripheryV3 = deployed[deployed.length - 1].contract;
-
-  // KeeperNetworkAdapter
-  deployed.push({...await deployContract(
-    'KeeperNetworkAdapter', [controller.address, ePoolHelper.address], opts
-  )});
 
   // EPool - WETH / DAI
   deployed.push({...await deployContract(
@@ -80,36 +69,6 @@ async function main(): Promise<void> {
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Set params                                                                                                      */
   /* --------------------------------------------------------------------------------------------------------------- */
-
-  // Add EPoolPeriphery as beneficiary on KeeperSubsidyPool
-  await callMethod(
-    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeriphery.address, true], opts
-  );
-
-  // Add EPoolPeripheryV3 as beneficiary on KeeperSubsidyPool
-  await callMethod(
-    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeripheryV3.address, true], opts
-  );
-
-  // Transfer 1 WETH to KeeperSubsidyPool
-  await callMethod(
-    deployer,
-    '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
-    WETH,
-    'transfer',
-    [keeperSubsidyPool.address, ethers.utils.parseEther('1')],
-    opts
-  );
-
-  // Transfer 20 DAI to KeeperSubsidyPool
-  await callMethod(
-    deployer,
-    '@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20',
-    DAI,
-    'transfer',
-    [keeperSubsidyPool.address, ethers.utils.parseUnits('20', 18)],
-    opts
-  );
 
   // Approve EPool on EPoolPeriphery
   await callMethod(

@@ -3,7 +3,7 @@ import { BigNumber } from 'ethers';
 import { Accounts, Signers } from './';
 import {
   EPool, EPoolHelper, EPoolPeriphery, EPoolPeripheryV3,
-  KeeperSubsidyPool, KeeperNetworkAdapter, EToken, ETokenFactory, Controller,
+  EToken, ETokenFactory, Controller,
   AggregatorMock, AggregatorV3Interface,
   UniswapRouterMock, UniswapV3RouterMock, IUniswapV2Factory, IUniswapV2Router02, ISwapRouter,
   TestERC20, TestEPoolLibrary
@@ -30,8 +30,6 @@ declare module 'mocha' {
     epp: EPoolPeriphery;
     eppV3: EPoolPeripheryV3;
     aggregator: AggregatorMock | AggregatorV3Interface;
-    ksp: KeeperSubsidyPool;
-    kna: KeeperNetworkAdapter;
     epl: TestEPoolLibrary;
     router: UniswapRouterMock | IUniswapV2Router02;
     routerV3: UniswapV3RouterMock | ISwapRouter;

@@ -69,26 +69,6 @@ describe('EPoolPeriphery', function () {
     });
   });
 
-  describe('#setMaxFlashSwapSlippage', function () {
-    it('should set max flash swap slippage if msg.sender is the dao', async function () {
-      await expect(
-        this.eppV3.connect(this.signers.dao).setMaxFlashSwapSlippage(1)
-      ).to.emit(this.eppV3, 'SetMaxFlashSwapSlippage').withArgs(1);
-      expect(await this.eppV3.connect(this.signers.dao).maxFlashSwapSlippage()).to.equal(1);
-    });
-
-    it('should set max flash swap slippage if msg.sender is the guardian', async function () {
-      await this.eppV3.connect(this.signers.guardian).setMaxFlashSwapSlippage(1);
-      expect(await this.eppV3.connect(this.signers.guardian).maxFlashSwapSlippage()).to.equal(1);
-    });
-
-    it('should fail setting max flash swap slippage if msg.sender is not the dao or guardian', async function () {
-      await expect(
-        this.eppV3.connect(this.signers.user).setMaxFlashSwapSlippage(1)
-      ).to.be.revertedWith('EPoolPeriphery: not dao or guardian');
-    });
-  });
-
   describe('#setFeeTierPoolPair', function () {
     it('should set fee tier for pair if msg.sender is the dao', async function () {
       await expect(
@@ -146,19 +126,6 @@ describe('EPoolPeriphery', function () {
       const eTokenAddr = await this.ep.connect(this.signers.admin).tranchesByIndex(0);
       assert(eTokenAddr !== ethers.constants.AddressZero);
       this.eToken = new ethers.Contract(eTokenAddr, ETokenArtifact.abi) as EToken;
-
-      // fund keeper subsidy pool
-      if (this.localRun) {
-        await Promise.all([
-          this.tokenA.connect(this.signers.admin).mint(this.ksp.address, this.sFactorA.mul(2)),
-          this.tokenB.connect(this.signers.admin).mint(this.ksp.address, this.sFactorB.mul(2))
-        ]);
-      } else {
-        await Promise.all([
-          this.tokenA.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorA.mul(5)),
-          this.tokenB.connect(this.signers.admin).transfer(this.ksp.address, this.sFactorB.mul(5))
-        ]);
-      }
 
       await this.controller.connect(this.signers.admin).setDao(this.accounts.dao);
       await this.controller.connect(this.signers.dao).setGuardian(this.accounts.guardian);
@@ -333,7 +300,7 @@ describe('EPoolPeriphery', function () {
     describe('#rebalanceWithFlashSwap', function () {
       it('should fail rebalancing an unapproved EPool', async function () {
         await expect(
-          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.eppV3.address)
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.eppV3.address, 0)
         ).to.be.revertedWith('EPoolPeriphery: unapproved EPool');
       });
 
@@ -343,11 +310,10 @@ describe('EPoolPeriphery', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2600));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.eppV3.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('0.9', 18)) // -10% slippage
         await expect(
-          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address)
+          // -10% slippage
+          this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('0.9', 18))
         ).to.be.revertedWith('EPoolPeriphery: excessive slippage');
-        await this.eppV3.connect(this.signers.guardian).setMaxFlashSwapSlippage(ethers.utils.parseUnits('1.1', 18)) // 10% slippage
       });
 
       it('should rebalance the EPool via flash swap - rChange == 0', async function () {
@@ -356,7 +322,8 @@ describe('EPoolPeriphery', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2600));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address);
+        // 10% slippage
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));
@@ -376,7 +343,8 @@ describe('EPoolPeriphery', function () {
         await this.aggregator.connect(this.signers.admin).setAnswer(this.sFactorI.mul(2300));
         const currentRatioUnbalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(tranche.targetRatio, currentRatioUnbalanced));
-        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address);
+        // 10% slippage
+        await this.eppV3.connect(this.signers.user).rebalanceWithFlashSwap(this.ep.address, ethers.utils.parseUnits('1.1', 18));
         const currentRatioBalanced = await this.eph.connect(this.signers.user).currentRatio(this.ep.address, tranche.eToken);
         assert(!this.roundEqual(currentRatioUnbalanced, currentRatioBalanced));
         assert(this.roundEqual(currentRatioBalanced, tranche.targetRatio));

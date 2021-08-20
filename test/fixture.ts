@@ -7,7 +7,6 @@ import EPoolArtifact from '../artifacts/contracts/EPool.sol/EPool.json';
 import EPoolHelperArtifact from '../artifacts/contracts/EPoolHelper.sol/EPoolHelper.json';
 import EPoolPeripheryArtifact from '../artifacts/contracts/EPoolPeriphery.sol/EPoolPeriphery.json';
 import EPoolPeripheryV3Artifact from '../artifacts/contracts/EPoolPeripheryV3.sol/EPoolPeripheryV3.json';
-import KeeperSubsidyPoolArtifact from '../artifacts/contracts/KeeperSubsidyPool.sol/KeeperSubsidyPool.json';
 import ETokenFactoryArtifact from '../artifacts/contracts/ETokenFactory.sol/ETokenFactory.json';
 import TestERC20Artifact from '../artifacts/contracts/mocks/TestERC20.sol/TestERC20.json';
 import AggregatorMockArtifact from '../artifacts/contracts/mocks/AggregatorMock.sol/AggregatorMock.json';
@@ -19,7 +18,7 @@ import ISwapRouterArtifact from '../artifacts/@uniswap/v3-periphery/contracts/in
 
 import { Accounts, Signers } from '../types';
 import {
-  Controller, EPool, EPoolHelper, EPoolPeriphery, KeeperSubsidyPool, ETokenFactory,
+  Controller, EPool, EPoolHelper, EPoolPeriphery, ETokenFactory,
   AggregatorMock, UniswapRouterMock, UniswapV3RouterMock, IUniswapV2Router02, IUniswapV2Factory, ISwapRouter,
   TestERC20
 } from '../typechain';
@@ -191,32 +190,20 @@ export async function environmentFixture(this: any): Promise<void> {
   ])) as EPool;
   // deploy exposure pool helper
   this.eph = (await deployContract(this.signers.admin, EPoolHelperArtifact, [])) as EPoolHelper;
-  // deploy keeper subsidy pool
-  this.ksp = (await deployContract(this.signers.admin, KeeperSubsidyPoolArtifact, [
-    this.controller.address
-  ])) as KeeperSubsidyPool;
   // deploy periphery
   this.epp = (await deployContract(this.signers.admin, EPoolPeripheryArtifact, [
     this.controller.address,
     (this.factory) ? this.factory.address : ethers.constants.AddressZero,
     this.router.address,
-    this.ksp.address,
-    parseUnits('20', 18) // 2000% slippage
   ])) as EPoolPeriphery;
   this.eppV3 = (await deployContract(this.signers.admin, EPoolPeripheryV3Artifact, [
     this.controller.address,
     UniswapV3Factory || ethers.constants.AddressZero,
     this.routerV3.address,
-    this.ksp.address,
-    parseUnits('20', 18), // 2000% slippage
     UniswapV3Quoter || ethers.constants.AddressZero
   ])) as EPoolPeriphery;
 
   await Promise.all([
-    // grant access for epp to request subsidy from ksp
-    this.ksp.connect(this.signers.admin).setBeneficiary(this.epp.address, true),
-    // grant access for eppV3 to request subsidy from ksp
-    this.ksp.connect(this.signers.admin).setBeneficiary(this.eppV3.address, true),
     // approve ep for epp
     this.epp.connect(this.signers.admin).setEPoolApproval(this.ep.address, true),
     // approve ep for eppV3

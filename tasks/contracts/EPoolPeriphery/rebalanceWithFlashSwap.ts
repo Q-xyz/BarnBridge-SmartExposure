@@ -13,6 +13,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
 .addParam('ePool', 'Address of EPool')
 .addParam('ePoolHelper', 'Address of EPoolHelper')
 .addParam('ePoolPeriphery', 'Address of EPoolPeriphery')
+.addParam('maxSlippage', 'Max. allowed slippage between EPool oracle and uniswap when executing a flash swap. 1.0e18 is defined as no slippage, 1.03e18 == 3% slippage, if < 1.0e18 then swap always has to make a profit')
 .setAction(async function (_taskArgs: any, hre) {
   const { ethers, artifacts } = hre;
   const admin: Signer = (await ethers.getSigners())[0];
@@ -65,7 +66,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   // @ts-ignore
   const gasPrice = String((await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast);
   const tx_rebalance = await ePoolPeriphery.connect(admin).rebalanceWithFlashSwap(
-    ePool.address, { gasLimit: 500000, gasPrice: gasPrice }
+    ePool.address, _taskArgs.maxSlippage,{ gasLimit: 500000, gasPrice: gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);

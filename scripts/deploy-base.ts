@@ -5,7 +5,7 @@ import { resolve } from 'path';
 dotenvConfig({ path: resolve(__dirname, './.env') });
 
 import { NETWORK_ENV } from '../network';
-import { callMethod, deployContract, verifyContract } from './helper';
+import { deployContract, verifyContract } from './helper';
 
 const { ethers } = hre;
 
@@ -41,41 +41,19 @@ async function main(): Promise<void> {
   // EPoolHelper
   deployed.push({...await deployContract('EPoolHelper', [], opts)});
 
-  // KeeperSubsidyPool
-  deployed.push({...await deployContract('KeeperSubsidyPool', [controller.address], opts)});
-  const keeperSubsidyPool = deployed[deployed.length - 1].contract;
-
   // EPoolPeriphery
   deployed.push({...await deployContract(
     'EPoolPeriphery',
-    // 1.03 % --> 3% flash swap slippage
-    [controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, '1030000000000000000'],
+    [controller.address, UniswapV2Factory, UniswapV2Router02],
     opts
   )});
-  const ePoolPeriphery = deployed[deployed.length - 1].contract;
 
   // EPoolPeripheryV3
   deployed.push({...await deployContract(
     'EPoolPeripheryV3',
-    // 1.03 % --> 3% flash swap slippage
-    [controller.address, UniswapV3Factory, UniswapV3Router, keeperSubsidyPool.address, '1030000000000000000', UniswapV3Quoter],
+    [controller.address, UniswapV3Factory, UniswapV3Router, UniswapV3Quoter],
     opts
   )});
-  const ePoolPeripheryV3 = deployed[deployed.length - 1].contract;
-
-  /* --------------------------------------------------------------------------------------------------------------- */
-  /* Set params                                                                                                      */
-  /* --------------------------------------------------------------------------------------------------------------- */
-
-  // Add EPoolPeriphery as beneficiary on KeeperSubsidyPool
-  await callMethod(
-    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeriphery.address, true], opts
-  );
-
-  // Add EPoolPeripheryV3 as beneficiary on KeeperSubsidyPool
-  await callMethod(
-    deployer, 'KeeperSubsidyPool', keeperSubsidyPool.address, 'setBeneficiary', [ePoolPeripheryV3.address, true], opts
-  );
 
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Verify contracts on Etherscan                                                                                   */
