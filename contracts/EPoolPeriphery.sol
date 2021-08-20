@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "./interfaces/IKeeperSubsidyPool.sol";
 import "./interfaces/IUniswapRouterV2.sol";
 import "./interfaces/IUniswapFactory.sol";
 import "./interfaces/IUniswapV2Pair.sol";
@@ -26,12 +25,8 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
 
     IUniswapV2Factory public immutable override factory;
     IUniswapV2Router01 public immutable override router;
-    // Keeper subsidy pool for making rebalancing via flash swaps capital neutral for msg.sender
-    IKeeperSubsidyPool public immutable override keeperSubsidyPool;
     // supported EPools by the periphery
     mapping(address => bool) public override ePools;
-    // max. allowed slippage between EPool oracle and uniswap when executing a flash swap
-    uint256 public override maxFlashSwapSlippage;
 
     event IssuedEToken(
         address indexed ePool, address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user
@@ -40,27 +35,20 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         address indexed ePool, address indexed eToken, uint256 amount, uint256 amountA, uint256 amountB, address user
     );
     event SetEPoolApproval(address indexed ePool, bool approval);
-    event SetMaxFlashSwapSlippage(uint256 maxFlashSwapSlippage);
     event RecoveredToken(address token, uint256 amount);
 
     /**
      * @param _controller Address of the controller
      * @param _factory Address of the Uniswap V2 factory
      * @param _router Address of the Uniswap V2 router
-     * @param _keeperSubsidyPool Address of keeper subsidiy pool
-     * @param _maxFlashSwapSlippage Max. allowed slippage between EPool oracle and uniswap
      */
     constructor(
         IController _controller,
         IUniswapV2Factory _factory,
-        IUniswapV2Router01 _router,
-        IKeeperSubsidyPool _keeperSubsidyPool,
-        uint256 _maxFlashSwapSlippage
+        IUniswapV2Router01 _router
     ) ControllerMixin(_controller) {
         factory = _factory;
         router = _router;
-        keeperSubsidyPool = _keeperSubsidyPool;
-        maxFlashSwapSlippage = _maxFlashSwapSlippage; // e.g. 1.05e18 -> 5% slippage
     }
 
         /**
@@ -104,20 +92,6 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
             ePools[address(ePool)] = false;
         }
         emit SetEPoolApproval(address(ePool), approval);
-        return true;
-    }
-
-    /**
-     * @notice Set max. slippage between EPool oracle and uniswap when performing flash swap
-     * @dev Can only be callede by the DAO or the guardian
-     * @param _maxFlashSwapSlippage Max. flash swap slippage
-     * @return True on success
-     */
-    function setMaxFlashSwapSlippage(
-        uint256 _maxFlashSwapSlippage
-    ) external override onlyDaoOrGuardian("EPoolPeriphery: not dao or guardian") returns (bool) {
-        maxFlashSwapSlippage = _maxFlashSwapSlippage;
-        emit SetMaxFlashSwapSlippage(maxFlashSwapSlippage);
         return true;
     }
 
@@ -292,13 +266,11 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
      * The potential slippage between the EPool oracle and uniswap is covered by the KeeperSubsidyPool.
      * @dev Fails if maxFlashSwapSlippage is exceeded in uniswapV2Call
      * @param ePool Address of the EPool to rebalance
-     * @param fracDelta Fraction of the delta to rebalance (1e18 for rebalancing the entire delta)
+     * @param maxSlippage max. allowed slippage between EPool oracle and uniswap when executing a flash swap
+     * 1.0e18 is defined as no slippage, 1.03e18 == 3% slippage, if < 1.0e18 then swap always has to make a profit
      * @return True on success
      */
-    function rebalanceWithFlashSwap(
-        IEPool ePool,
-        uint256 fracDelta
-    ) external override returns (bool) {
+    function rebalanceWithFlashSwap(IEPool ePool, uint256 maxSlippage) external override returns (bool) {
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         (address tokenA, address tokenB) = (address(ePool.tokenA()), address(ePool.tokenB()));
         (uint256 deltaA, uint256 deltaB, uint256 rChange, ) = EPoolLibrary.delta(
@@ -314,7 +286,7 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
             (amountOut0, amountOut1) = (address(tokenA) == pair.token0())
                 ? (deltaA, uint256(0)) : (uint256(0), deltaA);
         }
-        bytes memory data = abi.encode(ePool, fracDelta);
+        bytes memory data = abi.encode(ePool, msg.sender, maxSlippage);
         pair.swap(amountOut0, amountOut1, address(this), data);
         return true;
     }
@@ -334,11 +306,11 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         uint256 /* amount1 */,
         bytes calldata data
     ) external {
-        (IEPool ePool, uint256 fracDelta) = abi.decode(data, (IEPool, uint256));
+        (IEPool ePool, address sender, uint256 maxSlippage) = abi.decode(data, (IEPool, address, uint256));
         require(ePools[address(ePool)], "EPoolPeriphery: unapproved EPool");
         // fails if no funds are forwarded in the flash swap callback from the uniswap pair
         // TokenA, TokenB are already approved
-        (uint256 deltaA, uint256 deltaB, uint256 rChange, ) = ePool.rebalance(fracDelta);
+        (uint256 deltaA, uint256 deltaB, uint256 rChange, ) = ePool.rebalance(1e18);
         address[] memory path = new address[](2); // [0] flash swap repay token, [1] flash lent token
         uint256 amountsIn; // flash swap repay amount
         uint256 deltaOut;
@@ -354,12 +326,12 @@ contract EPoolPeriphery is ControllerMixin, IEPoolPeriphery {
         // if slippage is negative request subsidy, if positive top of KeeperSubsidyPool
         if (amountsIn > deltaOut) {
             require(
-                amountsIn * EPoolLibrary.sFactorI / deltaOut <= maxFlashSwapSlippage,
+                amountsIn * EPoolLibrary.sFactorI / deltaOut <= maxSlippage,
                 "EPoolPeriphery: excessive slippage"
             );
-            keeperSubsidyPool.requestSubsidy(path[0], amountsIn - deltaOut);
+            IERC20(path[0]).transferFrom(sender, address(this), amountsIn - deltaOut);
         } else if (amountsIn < deltaOut) {
-            IERC20(path[0]).safeTransfer(address(keeperSubsidyPool), deltaOut - amountsIn);
+            IERC20(path[0]).safeTransfer(address(sender), deltaOut - amountsIn);
         }
         // repay flash swap by sending amountIn to pair
         IERC20(path[0]).safeTransfer(msg.sender, amountsIn);

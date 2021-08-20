@@ -6,7 +6,6 @@ import ControllerArtifact from '../artifacts/contracts/Controller.sol/Controller
 import EPoolArtifact from '../artifacts/contracts/EPool.sol/EPool.json';
 import EPoolHelperArtifact from '../artifacts/contracts/EPoolHelper.sol/EPoolHelper.json';
 import EPoolPeripheryArtifact from '../artifacts/contracts/EPoolPeriphery.sol/EPoolPeriphery.json';
-import KeeperSubsidyPoolArtifact from '../artifacts/contracts/KeeperSubsidyPool.sol/KeeperSubsidyPool.json';
 import ETokenFactoryArtifact from '../artifacts/contracts/ETokenFactory.sol/ETokenFactory.json';
 import TestERC20Artifact from '../artifacts/contracts/mocks/TestERC20.sol/TestERC20.json';
 import AggregatorMockArtifact from '../artifacts/contracts/mocks/AggregatorMock.sol/AggregatorMock.json';
@@ -16,7 +15,7 @@ import IUniswapV2FactoryArtifact from '../artifacts/contracts/interfaces/IUniswa
 
 import { Accounts, Signers } from '../types';
 import {
-  Controller, EPool, EPoolHelper, EPoolPeriphery, KeeperSubsidyPool, ETokenFactory,
+  Controller, EPool, EPoolHelper, EPoolPeriphery, ETokenFactory,
   AggregatorMock, UniswapRouterMock, IUniswapV2Router02, IUniswapV2Factory, TestERC20
 } from '../typechain';
 
@@ -167,21 +166,13 @@ export async function environmentFixture(this: any): Promise<void> {
   ])) as EPool;
   // deploy exposure pool helper
   this.eph = (await deployContract(this.signers.admin, EPoolHelperArtifact, [])) as EPoolHelper;
-  // deploy keeper subsidy pool
-  this.ksp = (await deployContract(this.signers.admin, KeeperSubsidyPoolArtifact, [
-    this.controller.address
-  ])) as KeeperSubsidyPool;
   // deploy periphery
   this.epp = (await deployContract(this.signers.admin, EPoolPeripheryArtifact, [
     this.controller.address,
     (this.factory) ? this.factory.address : ethers.constants.AddressZero,
-    this.router.address,
-    this.ksp.address,
-    ethers.utils.parseUnits('20', 18) // 2000% slippage
+    this.router.address
   ])) as EPoolPeriphery;
 
-  // grant access for spp to request subsidy from ksp
-  await this.ksp.connect(this.signers.admin).setBeneficiary(this.epp.address, true);
   // approve sp for spp
   await this.epp.connect(this.signers.admin).setEPoolApproval(this.ep.address, true);
 

@@ -64,60 +64,22 @@ async function main(): Promise<void> {
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
   // Uniswap Router on Rinkeby
   // const ePoolPeriphery: Contract = await EPoolPeriphery.attach('');
-  const ePoolPeriphery: Contract = await EPoolPeriphery.deploy(
-    controller.address, UniswapV2Factory, UniswapV2Router02, keeperSubsidyPool.address, ethers.utils.parseUnits('0.05', 18) // 5% slippage
-  );
+  const ePoolPeriphery: Contract = await EPoolPeriphery.deploy(controller.address, UniswapV2Factory, UniswapV2Router02);
   await ePoolPeriphery.deployed();
   console.log(`EPoolPeriphery:`);
   console.log(`  TxHash:           ${ePoolPeriphery.deployTransaction.hash}`);
   console.log(`  Gas Used:         ${(await ePoolPeriphery.deployTransaction.wait()).gasUsed.toString()} Gwei`);
   console.log(`  Address:          ${ePoolPeriphery.address}`);
 
-  // // KeeperNetworkAdapter
-  const KeeperNetworkAdapter: ContractFactory = await ethers.getContractFactory('KeeperNetworkAdapter');
-  // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.attach('')
-  const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.deploy(
-    controller.address, ePool.address, ePoolHelper.address, ePoolPeriphery.address
-  );
-  await keeperNetworkAdapter.deployed();
-  console.log(`KeeperNetworkAdapter:`);
-  console.log(`  TxHash:           ${keeperNetworkAdapter.deployTransaction.hash}`);
-  console.log(`  Gas Used:         ${(await keeperNetworkAdapter.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  console.log(`  Address:          ${keeperNetworkAdapter.address}`);
-
   /* --------------------------------------------------------------------------------------------------------------- */
   /* Set params                                                                                                      */
   /* --------------------------------------------------------------------------------------------------------------- */
 
   // Initialization
-  console.log(`KeeperSubsidyPool.setBeneficiary:`);
-  const tx_grant = await keeperSubsidyPool.connect(signer).setBeneficiary(ePoolPeriphery.address, true);
-  console.log(`  TxHash:           ${tx_grant.hash}`);
-  console.log(`  Gas Used:         ${(await tx_grant.wait()).gasUsed.toString()} Gwei`);
-
   console.log(`EPoolPeriphery.setEPoolApproval:`);
   const tx_approval = await ePoolPeriphery.connect(signer).setEPoolApproval(ePool.address, true);
   console.log(`  TxHash:           ${tx_approval.hash}`);
   console.log(`  Gas Used:         ${(await tx_approval.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`EPoolPeriphery.setMaxFlashSwapSlippage:`);
-  const tx_slippage = await ePoolPeriphery.connect(signer).setMaxFlashSwapSlippage('20000000000000000000'); // 2000% - because of kovan
-  console.log(`  TxHash:           ${tx_slippage.hash}`);
-  console.log(`  Gas Used:         ${(await tx_slippage.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`KeeperSubsidyPool.addSubsidy:`);
-  const TokenA: ContractFactory = await ethers.getContractFactory('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20');
-  const tokenA: Contract = await TokenA.attach(WETH);
-  const tx_subsidy_1 = await tokenA.connect(signer).transfer(keeperSubsidyPool.address, '1000000000000000000'); // 1 WETH
-  console.log(`  TxHash:           ${tx_subsidy_1.hash}`);
-  console.log(`  Gas Used:         ${(await tx_subsidy_1.wait()).gasUsed.toString()} Gwei`);
-
-  console.log(`KeeperSubsidyPool.addSubsidy:`);
-  const TokenB: ContractFactory = await ethers.getContractFactory('@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20');
-  const tokenB: Contract = await TokenB.attach(DAI);
-  const tx_subsidy_2 = await tokenB.connect(signer).transfer(keeperSubsidyPool.address, '20000000000000000000'); // 20 DAI
-  console.log(`  TxHash:           ${tx_subsidy_2.hash}`);
-  console.log(`  Gas Used:         ${(await tx_subsidy_2.wait()).gasUsed.toString()} Gwei`);
 
   console.log(`EPool.setFeeRate:`);
   const tx_fee = await ePool.connect(signer).setFeeRate('50000000000000000');

@@ -83,18 +83,6 @@ async function main(): Promise<void> {
   console.log(`  TxHash:           ${tx_tranche_3.hash}`);
   console.log(`  Gas Used:         ${(await tx_tranche_3.wait()).gasUsed.toString()} Gwei`);
   console.log(`  EToken:           ${(await ePool.connect(signer).getTranches())[2].eToken }`);
-
-  // KeeperNetworkAdapter
-  // const KeeperNetworkAdapter: ContractFactory = await ethers.getContractFactory('KeeperNetworkAdapter');
-  // // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.attach('')
-  // const keeperNetworkAdapter: Contract = await KeeperNetworkAdapter.deploy(
-  //   controller.address, ePool.address, ePoolHelper.address, ePoolPeriphery.address, { gasPrice }
-  // );
-  // await keeperNetworkAdapter.deployed();
-  // console.log(`KeeperNetworkAdapter:`);
-  // console.log(`  TxHash:           ${keeperNetworkAdapter.deployTransaction.hash}`);
-  // console.log(`  Gas Used:         ${(await keeperNetworkAdapter.deployTransaction.wait()).gasUsed.toString()} Gwei`);
-  // console.log(`  Address:          ${keeperNetworkAdapter.address}`);
 }
 
 main().then(() => process.exit(0)).catch((error: Error) => { console.error(error); process.exit(1); });

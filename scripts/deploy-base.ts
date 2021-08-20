@@ -55,12 +55,7 @@ async function main(): Promise<void> {
   const EPoolPeriphery: ContractFactory = await ethers.getContractFactory('EPoolPeriphery');
   // const ePoolPeriphery: Contract = await EPoolPeriphery.attach('');
   const ePoolPeriphery: Contract = await EPoolPeriphery.deploy(
-    controller.address,
-    UniswapV2Factory,
-    UniswapV2Router02,
-    keeperSubsidyPool.address,
-    '1030000000000000000', // 3% slippage
-    { gasPrice }
+    controller.address, UniswapV2Factory, UniswapV2Router02, { gasPrice }
   );
   await ePoolPeriphery.deployed();
   console.log(`EPoolPeriphery:`);
