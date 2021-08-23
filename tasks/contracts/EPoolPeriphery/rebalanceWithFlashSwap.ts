@@ -58,10 +58,9 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   if ((await ethers.provider.getNetwork()).chainId !== 137) {
     gasPrice = String((await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast);
   }
-  let gas;
   try {
-    gas = await ePoolPeriphery.connect(admin).estimateGas.rebalanceWithFlashSwap(
-      ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice: gasPrice }
+    await ePoolPeriphery.connect(admin).callStatic.rebalanceWithFlashSwap(
+      ePool.address, ethers.utils.parseUnits('1', 18)
     );
   } catch (error) {
     console.log('Gas estimation failed: ' + error);
@@ -71,7 +70,6 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
     ePool.address, ethers.utils.parseUnits('1', 18), { gasLimit: 500000, gasPrice: gasPrice }
   );
   console.log(`EPoolPeriphery.rebalanceAllWithFlashSwap:`);
-  console.log(`  Est. Gas:       ${gas.toString()}`);
   console.log(`  TxHash:         ${tx_rebalance.hash}`);
   const receipt = await tx_rebalance.wait();
   const RebalanceEvent = new ethers.utils.Interface([ePool.interface.getEvent('RebalancedTranches')]);
