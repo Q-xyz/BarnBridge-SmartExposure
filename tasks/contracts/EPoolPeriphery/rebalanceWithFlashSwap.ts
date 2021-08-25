@@ -55,7 +55,9 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   let gasPrice = '1';
-  if ((await ethers.provider.getNetwork()).chainId !== 137) {
+  if (Number((await ethers.provider.getNetwork()).chainId) === 137) {
+    gasPrice = String((await (await fetch('https://gasstation-mainnet.matic.network/')).json()).fast);
+  } else {
     gasPrice = String((await (await fetch('https://www.gasnow.org/api/v3/gas/price')).json()).data.fast);
   }
   try {
