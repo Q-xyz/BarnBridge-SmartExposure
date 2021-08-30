@@ -63,7 +63,7 @@ task(REBALANCE_WITH_FLASH_SWAP, 'Rebalances a EPool with a flash swap')
     );
   } else if (chainId === 137) {
     gasPrice = ethers.utils.parseUnits(
-      String((await (await fetch('https://gasstation-mainnet.matic.network/')).json()).fastest),
+      String((await (await fetch('https://gasstation-mainnet.matic.network/')).json()).fast),
       'gwei'
     );
   }
